@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= title %></title>
+    <link rel='stylesheet' href="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css"/>
+    <link rel='stylesheet' href='stylesheets/client.css'/>
+<script src="/socket.io/socket.io.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+<script src="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+ <script src='https://swww.tokbox.com/webrtc/v2.0/js/TB.min.js'></script>
+<script>
+$(document).ready(function(){
+
+		var clickReset = 0;
+
+		$(document).on("click", ".user_list, .whisper, .block", function(){
+			var user = $(".user_name").prop("innerText")
+			if($(this).attr("class") === "block"){
+				var answer = prompt("do you wish to block this asshole?")
+				option_check({name: user, response: answer});
+			}
+			if($(this).attr("class") === "whisper"){
+				alert("whisper!");
+			}
+				if(clickReset === 0){
+					 var options = $(this).after("<div class='chat_options'><div class='whisper'><span>whisper</span></div><br><div class='block'><span>block</span></div></div>");
+					 clickReset = 1;
+				}else{
+					$(".chat_options").remove();
+					clickReset = 0;
+				}
+		});
+
+		$(document).on("mouseleave", ".chat_options",function(){
+			 $(".chat_options").remove();
+		});
+
+	var user_name = prompt("type a user name");
+	var chat_room = prompt("Enter Room?");
+
+	io = io.connect();
+	io.emit('ready', {name: user_name, room: chat_room, time: new Date().toString()});
+	io.emit('get_chats',{name: user_name, room: chat_room, time: new Date().toString()});
+	io.emit('get_current_users',{name: user_name, room: chat_room, time: new Date().toString()});
+
+	//Listens for a new user entering room!
+	io.on("user_entered_room", function(data){
+		    console.log(data.users_info, "this is the users info");		     
+			var user_entered = $("#chatbox").append("<p>" + data.message + "</p>");
+	})
+
+	io.on("current_users", function(data){
+		console.log("CURRENT USERS HIT!",data.current_users);
+		$("ul").html("");
+		for(var i = 0; i < data.current_users.length; i++){
+			$("ul").append("<li id=" + data.current_users[i].name +  " class='user_list'>" + data.current_users[i].name + "</li>");
+		}
+	})
+
+	io.on('previous_chats', function(data){
+		console.log("prev chat being called!",data);
+		// console.log(data.previous_messages);
+		$("ul").html("");
+		for(var i = 0; i < data.previous_messages.length; i++){
+			$("#chatbox").append("<div class='well well-sm previous_users user_list'>" + data.previous_messages[i].name + ": " + data.previous_messages[i].text + "</div>");
+			$("ul").append("<li><div class='well well-sm active_user user_list'>" + data.previous_messages[i].name + "</div></li>");
+		}
+	})
+
+	io.on('broadcast_chat', function(data){
+		console.log(data, "text from server");
+		var chat = $("#chatbox").append("<div class='well well-sm active_user user_list''>" + "<span class='name'>" + "<div class='user_name'>" + data.chat_message.name + "</div>" +  "</span> " + "<span class='center'>" + data.chat_message.text + data.chat_message.time + "</span>" + "</div>").children().last().hide();
+		console.log($(".user_name").prop("innerText"), "selected name from child data");
+		$("#chatbox").children().fadeIn("slow", function(){
+			console.log("fadeIn executed!")
+		});	
+	})
+
+	io.on("leave", function(data){
+		console.log("this user disconnected",data.disconnected_user.name);
+		$("#chatbox").append("<p>" + data.message + "</p>");
+		var list = $("li");
+		console.log(list);
+		for(var i = 0; i < list.length; i++){
+			console.log(list[i].innerHTML);
+			if(list[i].innerHTML === data.disconnected_user.name){
+				document.getElementById(data.disconnected_user.name).remove();
+			}
+		}
+	})
+
+	$("#send_text").click(function(){
+		var message = $("#enter_text").val();
+		io.emit("send_chat",{text:message,name:user_name,room:chat_room, time: new Date().toString()});
+		$("#enter_text").val("");
+	});
+
+	function option_check(options){
+		console.log(options,"option check data");
+		if(options.response === "yes"){
+			io.emit("options_received", options);
+		}
+
+	}
+
+
+});
+</script>
+ </head>
+<body>
+	<div id="wrapper" class="container-fluid">
+		 <div id="myPublisherDiv"></div>
+	<div id ="chatbox_wrapper" class="row">
+		<div id="chatbox" class="col-md-8 col-md-offset-1 col-xs-8 panel panel-primary offset1 well well-lg"></div>
+			<div class= "col-md-3 col-md-offset1 col-xs-4  panel panel-primary ">
+				<div class="btn-group-vertical btn-group.btn-group-justified ">
+		 			<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+		      		 Rooms
+		    		 <span class="caret"></span>
+		   			 </button>
+		   			 <ul class="dropdown-menu">
+		      		 <li><a href="#">Room1</a></li>
+		      		 <li><a href="#">Room2</a></li>
+		    		 </ul>
+				</div>
+			</div>
+		<div id="user_container" class="col-md-2 col-xs-4 panel panel-primary">
+			<ul>
+			</ul>
+		</div>
+	</div>
+
+	<div id="text_bar" class="row">
+	  <div id="text_bar_container" class="col-md-8 col-md-offset-1 col-xs-12">
+	    <div class="input-group">
+	      <span class="input-group-btn ">
+	        <button id="send_text" class="btn btn-default" type="button">Send!</button>
+	      </span>
+	      <input id="enter_text" type="text" class="form-control">
+
+	    </div><!-- /input-group -->
+	  </div><!-- /.col-lg-6 -->
+	</div>
+	<!-- <svg id="svg"></svg> -->
+		
+	</div>	
+</body>
+</html>

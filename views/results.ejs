@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= title %></title>
+    <link rel='stylesheet' href='stylesheets/client.css'/>
+  </head>
+ <script src="/socket.io/socket.io.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+<script>
+$(document).ready(function(){
+
+});
+</script>
+<body>
+	  <p>Welcome to <%= title %></p>
+
+	    <% if(session_data.sessionID)
+       { %>
+         <%= "Thanks for submitting your form. The information you submitted is Email: " + session_data.email + ", Name: " + session_data.name %>
+    <% } %>    
+<div id="chatbox"><input id="text" type="text" placeholder="enter text"></input></div>
+</body>
+</html>

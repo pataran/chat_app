@@ -1,0 +1,28 @@
+<html>
+  <head>
+    <title>Opentok Quick Start</title>
+    <script src='https://swww.tokbox.com/webrtc/v2.0/js/TB.min.js'></script>
+    <script type="text/javascript">
+      // Initialize API key, session, and token...
+      // Think of a session as a room, and a token as the key to get in to the room
+      // Sessions and tokens are generated on your server and passed down to the client
+      var apiKey = "44741012";
+      var sessionId = "2_MX40NDc0MTAxMn5-V2VkIEFwciAyMyAxNjowMzo0NyBQRFQgMjAxNH4wLjk0MTk2Njgzfn4";
+      var token = "T1==cGFydG5lcl9pZD00NDc0MTAxMiZzZGtfdmVyc2lvbj10YnJ1YnktdGJyYi12MC45MS4yMDExLTAyLTE3JnNpZz02MWFjNWQxYmQxZGJkOGFhNDFiMjEyN2IyYWIyMWFmYjdiMzA4Nzk2OnJvbGU9cHVibGlzaGVyJnNlc3Npb25faWQ9JmNyZWF0ZV90aW1lPTEzOTgyOTQ3NTImbm9uY2U9MC4xMTUyNTgyMTAwODg1MjYx";
+
+      // Initialize session, set up event listeners, and connect
+      var session = TB.initSession(sessionId);
+      session.addEventListener('sessionConnected', sessionConnectedHandler);
+      session.connect(apiKey, token);
+      
+      function sessionConnectedHandler(event) {
+        var publisher = TB.initPublisher(apiKey, 'myPublisherDiv');
+        session.publish(publisher);
+      }
+    </script>
+  </head>
+  <body>
+    <h1>Awesome video feed!</h1>
+    <div id="myPublisherDiv"></div>
+  </body>
+</html>
